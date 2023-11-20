@@ -431,19 +431,14 @@ func (h *handlers) RegisterCourses(c echo.Context) error {
 		return req[i].ID < req[j].ID
 	})
 
-	tx, err := h.DB.Beginx()
-	if err != nil {
-		c.Logger().Error(err)
-		return c.NoContent(http.StatusInternalServerError)
-	}
-	defer tx.Rollback()
+
 
 	var errors RegisterCoursesErrorResponse
 	var newlyAdded []Course
 	for _, courseReq := range req {
 		courseID := courseReq.ID
 		var course Course
-		if err := tx.Get(&course, "SELECT * FROM `courses` WHERE `id` = ? FOR SHARE", courseID); err != nil && err != sql.ErrNoRows {
+		if err := h.DB.Get(&course, "SELECT * FROM `courses` WHERE `id` = ? FOR SHARE", courseID); err != nil && err != sql.ErrNoRows {
 			c.Logger().Error(err)
 			return c.NoContent(http.StatusInternalServerError)
 		} else if err == sql.ErrNoRows {
@@ -458,7 +453,7 @@ func (h *handlers) RegisterCourses(c echo.Context) error {
 
 		// すでに履修登録済みの科目は無視する
 		var count int
-		if err := tx.Get(&count, "SELECT COUNT(*) FROM `registrations` WHERE `course_id` = ? AND `user_id` = ?", course.ID, userID); err != nil {
+		if err := h.DB.Get(&count, "SELECT COUNT(*) FROM `registrations` WHERE `course_id` = ? AND `user_id` = ?", course.ID, userID); err != nil {
 			c.Logger().Error(err)
 			return c.NoContent(http.StatusInternalServerError)
 		}
@@ -474,7 +469,7 @@ func (h *handlers) RegisterCourses(c echo.Context) error {
 		" FROM `courses`" +
 		" JOIN `registrations` ON `courses`.`id` = `registrations`.`course_id`" +
 		" WHERE `courses`.`status` != ? AND `registrations`.`user_id` = ?"
-	if err := tx.Select(&alreadyRegistered, query, StatusClosed, userID); err != nil {
+	if err := h.DB.Select(&alreadyRegistered, query, StatusClosed, userID); err != nil {
 		c.Logger().Error(err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
@@ -492,6 +487,14 @@ func (h *handlers) RegisterCourses(c echo.Context) error {
 	if len(errors.CourseNotFound) > 0 || len(errors.NotRegistrableStatus) > 0 || len(errors.ScheduleConflict) > 0 {
 		return c.JSON(http.StatusBadRequest, errors)
 	}
+
+
+	tx, err := h.DB.Beginx()
+	if err != nil {
+		c.Logger().Error(err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+	defer tx.Rollback()
 
 	for _, course := range newlyAdded {
 		_, err = tx.Exec("INSERT INTO `registrations` (`course_id`, `user_id`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `course_id` = VALUES(`course_id`), `user_id` = VALUES(`user_id`)", course.ID, userID)
