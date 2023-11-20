@@ -23,7 +23,7 @@ sudo cp etc/mysql/mysql.conf.d/mysqld.cnf /etc/mysql/mysql.conf.d/mysqld.cnf
 echo "Copying Nginx configuration..."
 sudo cp etc/nginx/nginx.conf /etc/nginx/
 # sudo cp etc/nginx/conf.d/default.conf /etc/nginx/conf.d/
-sudo cp etc/nginx/sites-available/isucondition.conf /etc/nginx/sites-available/
+sudo cp etc/nginx/sites-available/isucholar.conf /etc/nginx/sites-available/
 
 # Golangディレクトリに移動
 echo "Changing directory to golang..."
@@ -31,7 +31,7 @@ cd go
 
 # Goビルド
 echo "Building the Go application..."
-go build -o isucondition
+go build -o isucholar
 
 # MySQLとNginxのログを初期化
 echo "Resetting MySQL and Nginx logs..."
@@ -43,14 +43,14 @@ sudo chmod 777 /var/log/nginx /var/log/nginx/*
 sudo chmod 777 /var/log/mysql /var/log/mysql/*
 # isu-go, mysql, nginxを再起動
 echo "Restarting isu-go, mysql, nginx..."
-sudo systemctl restart isucondition.go.service 
+sudo systemctl restart isucholar.go.service 
 sudo systemctl restart mysql
 sudo systemctl restart nginx
 
 # MySQLのスロークエリログを有効化
 echo "Enabling MySQL slow query log..."
-sudo mysql -u root -e "SET GLOBAL slow_query_log = 'ON';"
-sudo mysql -u root -e "SET GLOBAL long_query_time = 0.0;"
-sudo mysql -u root -e "SET GLOBAL slow_query_log_file = '/var/log/mysql/slow-query.log';"
+# sudo mysql -u root -e "SET GLOBAL slow_query_log = 'ON';"
+# sudo mysql -u root -e "SET GLOBAL long_query_time = 0.0;"
+# sudo mysql -u root -e "SET GLOBAL slow_query_log_file = '/var/log/mysql/slow-query.log';"
 
 echo "All tasks completed successfully."
