@@ -17,6 +17,7 @@ CREATE TABLE `users`
     `type`            ENUM ('student', 'teacher') NOT NULL
 );
 
+
 CREATE TABLE `courses`
 (
     `id`          CHAR(26) PRIMARY KEY,
@@ -41,6 +42,7 @@ CREATE TABLE `registrations`
     CONSTRAINT FK_registrations_course_id FOREIGN KEY (`course_id`) REFERENCES `courses` (`id`),
     CONSTRAINT FK_registrations_user_id FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
 );
+CREATE INDEX idx_user_id ON registrations(user_id);
 
 CREATE TABLE `classes`
 (
@@ -83,3 +85,6 @@ CREATE TABLE `unread_announcements`
     CONSTRAINT FK_unread_announcements_announcement_id FOREIGN KEY (`announcement_id`) REFERENCES `announcements` (`id`),
     CONSTRAINT FK_unread_announcements_user_id FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
 );
+
+
+CREATE INDEX idx_user_id ON unread_announcements(user_id);
